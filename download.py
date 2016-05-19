@@ -143,10 +143,11 @@ for idx,resource in enumerate(resources):
 			output.write(resp.read())
 			output.close()
 		except Exception as e:
-			print('There was an error downloading the resource at: ' + link + '. Retrying now...')
+			print('There was an error downloading the resource at: ' + resource + '. Retrying now...')
 			#print(e.fp.read()) # print http error if it happens
 			print(resource)
-			with path + '400.txt' as loc, open(loc, 'a') as out:
+			loc = path + '400.txt'
+			with open(loc, 'a') as out:
 				out.write('%s\n' % resource) # if there's an error, save the resource location in this file ....
 				out.close()
 
