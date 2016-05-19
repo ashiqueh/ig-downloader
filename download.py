@@ -3,15 +3,21 @@ import time
 from selenium.webdriver.chrome.options import Options 
 from selenium.webdriver.common.keys import Keys
 import myparser 
-#from selenium.webdriver.common.keys import keys
-print("Don't forget to chcp 65001")
+import os
+import urllib.request
 
+print("Don't forget to chcp 65001") #reminder to change shell text encoding so the program doesn't crash when testing
 
-#print('Please enter the username')
-#user = input()
+print('Please enter the username')
 
-with open('users.txt', 'r') as f:
-	user = f.readline().strip()
+user = input()
+#with open('users.txt', 'r') as f:
+#	user = f.readline().strip()
+
+path = 'dl/' + user + '/' #makes directory with desired username to save the media 
+
+if not os.path.exists(path):
+	os.makedirs(path) # make dl directory
 
 driver = webdriver.Chrome('C:/webdrivers/chromedriver.exe')
 
@@ -70,9 +76,28 @@ htmlparser = myparser.IgParser()
 
 htmlparser.feed(html)
 
-#print(htmlparser.data) #should print the last link .. and it does! 
+#print(htmlparser.data) #should print a list of all links .. and it does! 
 
+# now we can load each url into the driver
+# and download the pictures after
+list_of_pictures = htmlparser.data
 
+resources = []
+
+for picture in (list_of_pictures):
+	driver.get(picture) # loads picture into web driver
+	html = driver.execute_script('return document.documentElement.outerHTML') #html of final page 
+	htmlparser.feed(html)
+
+print(htmlparser.resources) # prints out list of all resources on page
+
+resources = htmlparser.resources
+
+#resources = input() # delete this after
+
+for resource in resources:
+	file_name = path + resource.split('/')[-1] # everything after the last backslash
+	urllib.request.urlretrieve(resource,file_name)
 
 # class = "_8mlbc _vbtk2 _t5r8b"
 # this is the class
