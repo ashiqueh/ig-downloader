@@ -5,6 +5,7 @@ class IgParser (HTMLParser):
         HTMLParser.__init__(self)
         self.data = []
         self.resources = []
+        self.current_resource = ''
 
     def handle_starttag(self, tag, attrs):
         if tag == 'a':
@@ -20,6 +21,7 @@ class IgParser (HTMLParser):
                 url = dict(attrs)['content']
                 url = url.split('?ig_cache_key',1)[0]
                 self.resources.append(url)
+                self.current_resource = url 
 
     def handle_endtag(self, tag):
         #print("Encountered an end tag :", tag)

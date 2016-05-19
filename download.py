@@ -2,9 +2,14 @@ from selenium import webdriver
 import time
 from selenium.webdriver.chrome.options import Options 
 from selenium.webdriver.common.keys import Keys
-import myparser 
+import myparser
 import os
 import urllib.request
+
+'''
+TODO : organize pictures by date 
+
+'''
 
 print("Don't forget to chcp 65001") #reminder to change shell text encoding so the program doesn't crash when testing
 
@@ -25,7 +30,6 @@ print('Webdriver opened')
 chrome_options = Options()
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-setuid-sandbox')
-
 
 driver.get('https://www.instagram.com/'+ user +'/')
 #assert "Python" in driver.title
@@ -52,7 +56,6 @@ max_height = 0
 
 element_path = "//a[@class='_8mlbc _vbtk2 _t5r8b']"
 element = driver.find_element_by_xpath(element_path)
-
 
 #loads whole instagram page in selenium 
 
@@ -82,22 +85,71 @@ htmlparser.feed(html)
 # and download the pictures after
 list_of_pictures = htmlparser.data
 
+loc = path + 'list_of_resources.txt'
+with open(loc,'w') as out: #i do this just in case there's some unforeseen error, you still have the work done so far saved
+	for item in list_of_pictures:
+		out.write('%s\n' % item)
+	out.close()
+
 resources = []
 
-for picture in (list_of_pictures):
-	driver.get(picture) # loads picture into web driver
-	html = driver.execute_script('return document.documentElement.outerHTML') #html of final page 
+#use urllib.request to get this stuff... man i'm dumb hahahahaha 
+
+
+#with path + 'resources.txt' as loc, open(loc,'a') as out: #same reason 
+
+loc = path + 'resources.txt'
+out = open(loc, 'w')
+
+for idx,picture in enumerate(list_of_pictures):
+	if idx % 5 == 0:
+		print('Fetching resource #%d.' % idx)
+	try:
+		resp = urllib.request.urlopen(picture)
+	except Exception as e:
+		print('Unable to retrieve resource: %s' % picture)
+	html = bytes.decode(resp.read())
+	#driver.get(picture) # loads picture into web driver
+	#html = driver.execute_script('return document.documentElement.outerHTML') #html of final page 
 	htmlparser.feed(html)
+	out.write('%s\n' % htmlparser.current_resource) # writes resource locations as they're retrieved so in case there's a crash
+
+out.close()
+
+print('abc')
 
 print(htmlparser.resources) # prints out list of all resources on page
 
+print('def')
+
 resources = htmlparser.resources
+
+#with path + 'resources.txt' as loc, open(loc,'wb') as out: #same reason 
+#	for item in resources:
+#		out.write('%s\n' % item)
 
 #resources = input() # delete this after
 
-for resource in resources:
+#downloads resources 
+for idx,resource in enumerate(resources):
+	if idx % 5 == 0:
+		print('Downloading resource #%d.' % idx)
 	file_name = path + resource.split('/')[-1] # everything after the last backslash
-	urllib.request.urlretrieve(resource,file_name)
+	#urllib.request.urlretrieve(resource,file_name) # not gonna use urlretrieve for now 
+	while not os.path.isfile(file_name): #not sure why, but sometimes takes multiple tries for resource, this works for now 
+		try:
+			resp = urllib.request.urlopen(resource)
+			output = open(file_name, 'wb')
+			output.write(resp.read())
+			output.close()
+		except Exception as e:
+			print('There was an error downloading the resource at: ' + link + '. Retrying now...')
+			#print(e.fp.read()) # print http error if it happens
+			print(resource)
+			with path + '400.txt' as loc, open(loc, 'a') as out:
+				out.write('%s\n' % resource) # if there's an error, save the resource location in this file ....
+				out.close()
+
 
 # class = "_8mlbc _vbtk2 _t5r8b"
 # this is the class
